@@ -9,10 +9,13 @@ import { initialValues, validationSchema } from "@utils/forms/auth/login"
 import { api } from "@services/api"
 import { useToast } from "@gluestack-ui/themed"
 import { ToastMessage } from "@components/ToastMessage"
+import { storageUserSave } from "@storage/storageUser"
+import { useAuth } from "@hooks/useAuth"
 
 export function SignIn() {
     const { navigate } = useNavigation<TAuthNavigatorRoutesProps>();
     const toast = useToast();
+    const { signInUser } = useAuth();
 
     function handleRecoverPassword() {
         navigate("recoverPassword")
@@ -25,14 +28,13 @@ export function SignIn() {
             });
             if (!response.data) throw new Error();
 
-            if(response.data.responseHeader.responseStatus == "ERROR") {
+            if (response.data.responseHeader.responseStatus == "ERROR") {
                 throw new Error(response.data.responseHeader.message);
             }
 
             const data = JSON.parse(response.data.data);
 
-            console.log(data);
-            
+            await signInUser(data);
 
             toast.show({
                 placement: 'top',
@@ -51,7 +53,7 @@ export function SignIn() {
                     id={id}
                     action="error"
                     title="Erro ao fazer login"
-                    description={error?.message || "Ocorreu um erro interno, tente novamente mais tarde"} 
+                    description={error?.message || "Ocorreu um erro interno, tente novamente mais tarde"}
                     onClose={() => toast.close(id)}
                 />)
             });

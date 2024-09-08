@@ -24,8 +24,8 @@ export function AppRoutes() {
             screenOptions={{
                 headerShown: false,
                 tabBarShowLabel: false,
-                tabBarActiveTintColor: tokens.colors.blue500,
-                tabBarInactiveTintColor: tokens.colors.trueGray500,
+                tabBarActiveTintColor: tokens.colors.blue600,
+                tabBarInactiveTintColor: tokens.colors.trueGray600,
                 tabBarStyle: {
                     backgroundColor: tokens.colors.white,
                     borderColor: tokens.colors.trueGray300,
