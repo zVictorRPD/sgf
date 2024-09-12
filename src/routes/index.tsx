@@ -5,6 +5,7 @@ import { AuthRoutes } from "./auth.routes";
 import { AppRoutes } from "./app.routes";
 import { useAuth } from "@hooks/useAuth";
 import { Loading } from "@components/Loading";
+import { AppProvider } from "@contexts/AppContext";
 
 
 export function Routes() {
@@ -13,7 +14,7 @@ export function Routes() {
     const theme = DefaultTheme;
     theme.colors.background = config.tokens.colors.white;
 
-    if(isLoadingUserData) {
+    if (isLoadingUserData) {
         return <Loading />
     }
 
@@ -22,7 +23,12 @@ export function Routes() {
             <NavigationContainer
                 theme={theme}
             >
-                {user?.userId ? <AppRoutes /> : <AuthRoutes />}
+                {user?.userId ?
+                    <AppProvider>
+                        <AppRoutes />
+                    </AppProvider>
+                    : <AuthRoutes />
+                }
             </NavigationContainer>
         </Box>
     );

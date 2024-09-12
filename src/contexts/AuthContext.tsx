@@ -1,3 +1,4 @@
+import { api } from "@services/api";
 import { storageUserGet, storageUserSave } from "@storage/storageUser";
 import { IUser } from "@utils/interfaces/user";
 import React, { createContext, ReactNode, useEffect, useState } from "react";
@@ -15,16 +16,21 @@ export const AuthContext = createContext<IAuthContext>({} as IAuthContext);
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<IUser>({} as IUser);
     const [isLoadingUserData, setIsLoadingUserData] = useState(true);
-    const [token, setToken] = useState<string>("");
 
     async function signInUser(user: IUser) {
         setUser(user);
         await storageUserSave(user);
+        //setApi headers
+        api.defaults.headers["user-id"] = user.userId;
+        api.defaults.headers["company-id"] = user.company.companyId;
     }
 
     async function signOutUser() {
         setUser({} as IUser);
         await storageUserSave({} as IUser);
+        //setApi headers
+        api.defaults.headers["user-id"] = "";
+        api.defaults.headers["company-id"] = "";
     }
 
     async function loadUserData() {
@@ -33,6 +39,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const userData = await storageUserGet();
             if (userData.userId) {
                 setUser(userData);
+                //setApi headers
+                api.defaults.headers["user-id"] = userData.userId;
+                api.defaults.headers["company-id"] = userData.company.companyId;
             }
         } catch (error) {
             console.log(error);

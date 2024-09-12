@@ -1,3 +1,5 @@
+import { IVehicle } from "./vehicle";
+
 export interface IUser {
     userId: number;
     name: string;
@@ -9,6 +11,37 @@ export interface IUser {
     updatedAt: string;
     company: ICompany;
     profile: IProfile;
+    relationshipUserOperationalBases: relationshipUserOperationalBases[];
+
+    vehicleId: string;
+    operationalBaseId: string;
+}
+
+interface relationshipUserOperationalBases {
+    relationshipUserOperationalBaseId: string;
+    companyId: string;
+    userId: string;
+    operationalBase: OperationalBase;
+    userCreatedAt: string;
+    createdAt: string;
+}
+
+export interface OperationalBase {
+    operationalBaseId: string;
+
+    userCreatedAt: string;
+    userUpdatedAt: string;
+    createdAt: string;
+    updatedAt: string;
+    companyId: string;
+    costCenter: string;
+    description: string;
+    address?: string;
+    cnpj?: string;
+    municipalRegistration?: string;
+    email?: string;
+    telephone?: string;
+    status: boolean;
 }
 
 export interface ICompany {
@@ -40,6 +73,11 @@ export interface IProfile {
 }
 
 export interface IPermission {
+    applicationAccess: boolean;
+    driver: boolean;
+    fillUpFuel: boolean;
+
+    // dados não usados no app
     userCreatedAt: number;
     userUpdatedAt: number;
     createdAt: string;
@@ -47,7 +85,6 @@ export interface IPermission {
     permissionId: number;
     companyId: number;
     profileId: number;
-    applicationAccess?: boolean;
     backofficeAccess?: boolean;
     dashboardView?: boolean;
     companyEdit?: boolean;

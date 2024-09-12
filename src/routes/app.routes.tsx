@@ -5,6 +5,7 @@ import { Dashboard } from "@screens/logged/Dashboard";
 import { Refuel } from "@screens/logged/Refuel";
 import { FuelIcon, HomeIcon, ListChecksIcon } from "lucide-react-native";
 import { config } from "../../config/gluestack-ui.config";
+import { useAuth } from "@hooks/useAuth";
 
 type TAppRoutesProps = {
     dashboard: undefined;
@@ -17,8 +18,9 @@ export type TAppNavigatorRoutesProps = BottomTabNavigationProp<TAppRoutesProps>;
 const { Navigator, Screen } = createBottomTabNavigator<TAppRoutesProps>();
 
 export function AppRoutes() {
-
     const { tokens } = config;
+    const { user } = useAuth();
+
     return (
         <Navigator
             screenOptions={{
@@ -36,29 +38,37 @@ export function AppRoutes() {
                 name="dashboard"
                 component={Dashboard}
                 options={{
-                    tabBarIcon: ({color}) => (
+                    tabBarIcon: ({ color }) => (
                         <Icon as={HomeIcon} size="xl" color={color} />
                     )
                 }}
             />
-            <Screen
-                name="checkIndex"
-                component={CheckIndex}
-                options={{
-                    tabBarIcon: ({color}) => (
-                        <Icon as={ListChecksIcon} size="xl" color={color} />
-                    )
-                }}
-            />
-            <Screen
-                name="refuel"
-                component={Refuel}
-                options={{
-                    tabBarIcon: ({color}) => (
-                        <Icon as={FuelIcon} size="xl" color={color} />
-                    )
-                }}
-            />
+            {user.vehicleId !== "" && (
+                <>
+                    {user?.profile.permission.driver && (
+                        <Screen
+                            name="checkIndex"
+                            component={CheckIndex}
+                            options={{
+                                tabBarIcon: ({ color }) => (
+                                    <Icon as={ListChecksIcon} size="xl" color={color} />
+                                )
+                            }}
+                        />
+                    )}
+                    {(user?.profile.permission.driver || user?.profile.permission.fillUpFuel) && (
+                        <Screen
+                            name="refuel"
+                            component={Refuel}
+                            options={{
+                                tabBarIcon: ({ color }) => (
+                                    <Icon as={FuelIcon} size="xl" color={color} />
+                                )
+                            }}
+                        />
+                    )}
+                </>
+            )}
         </Navigator>
     )
 }

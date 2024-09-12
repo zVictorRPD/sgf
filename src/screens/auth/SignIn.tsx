@@ -9,7 +9,6 @@ import { initialValues, validationSchema } from "@utils/forms/auth/login"
 import { api } from "@services/api"
 import { useToast } from "@gluestack-ui/themed"
 import { ToastMessage } from "@components/ToastMessage"
-import { storageUserSave } from "@storage/storageUser"
 import { useAuth } from "@hooks/useAuth"
 
 export function SignIn() {
@@ -34,7 +33,19 @@ export function SignIn() {
 
             const data = JSON.parse(response.data.data);
 
-            await signInUser(data);
+            if(data.profile.permission.applicationAccess === false) {
+                throw new Error("Você não tem permissão para acessar o aplicativo");
+            }
+
+            if(data?.relationshipUserOperationalBases.length === 0) {
+                throw new Error("Você não tem bases operacionais vinculadas ao seu usuário");
+            }
+
+            await signInUser({
+                ...data,
+                vehicleId: "",
+                operationalBaseId: ""
+            });
 
             toast.show({
                 placement: 'top',

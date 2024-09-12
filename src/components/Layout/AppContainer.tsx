@@ -1,4 +1,4 @@
-import { VStack } from "@gluestack-ui/themed";
+import { ScrollView, VStack } from "@gluestack-ui/themed";
 
 interface IAppContainerProps {
     children: React.ReactNode;
@@ -6,10 +6,15 @@ interface IAppContainerProps {
 
 export function AppContainer({ children }: IAppContainerProps) {
     return (
-        <VStack
-            p={"$6"}
+        <ScrollView
+            contentContainerStyle={{ flexGrow: 1 }}
+            showsVerticalScrollIndicator
         >
-            {children}
-        </VStack>
+            <VStack
+                p={"$6"}
+            >
+                {children}
+            </VStack>
+        </ScrollView>
     );
 }
