@@ -1,20 +1,21 @@
-import { IVehicle } from "./vehicle";
-
 export interface IUser {
     userId: number;
     name: string;
     email: string;
+    cpf: string;
+    vehicleId: string;
+    operationalBaseId: string;
+    flDriver: boolean;
+    flOperationalAssistant: boolean;
+
+    company: ICompany;
+    profile: IProfile;
+    relationshipUserOperationalBases: relationshipUserOperationalBases[];
     userUpdatedAt: number;
     userCreatedAt: number;
     status: boolean;
     createdAt: string;
     updatedAt: string;
-    company: ICompany;
-    profile: IProfile;
-    relationshipUserOperationalBases: relationshipUserOperationalBases[];
-
-    vehicleId: string;
-    operationalBaseId: string;
 }
 
 interface relationshipUserOperationalBases {

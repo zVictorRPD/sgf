@@ -1,16 +1,19 @@
-import * as Yup from 'yup';
+import * as Yup from "yup";
 
 export const initialValues = {
-    carKm : '',
-    fuelQuantity : '',
-    fuelType : '',
-}
+    fuelTableId: "",
+    milage: "",
+    literAmount: "",
+    literValue: "",
+};
 
 export const validationSchema = Yup.object({
-    carKm: Yup.string()
-        .required('A quilometragem do carro é obrigatória'),
-    // fuelQuantity: Yup.string()
-    //     .required('A quantidade de combustível é obrigatória'),
-    // fuelType: Yup.string()
-    //     .required('O tipo de combustível é obrigatório'),
-})
+    fuelTableId: Yup.string().required("O tipo de combustível é obrigatório"),
+    milage: Yup.string().required("A quilometragem do carro é obrigatória"),
+    literAmount: Yup.string()
+        .max(3, "A quantidade de litros não pode ser maior que 3 dígitos")
+        .required("A quantidade de litros é obrigatória"),
+    literValue: Yup.string()
+        // .max(3, "O valor do litro não pode ser maior que 3 dígitos")
+        .required("O valor do litro é obrigatório"),
+});

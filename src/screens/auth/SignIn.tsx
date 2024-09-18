@@ -40,7 +40,8 @@ export function SignIn() {
             if(data?.relationshipUserOperationalBases.length === 0) {
                 throw new Error("Você não tem bases operacionais vinculadas ao seu usuário");
             }
-
+            console.log(data);
+            
             await signInUser({
                 ...data,
                 vehicleId: "",

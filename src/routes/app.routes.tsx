@@ -45,7 +45,7 @@ export function AppRoutes() {
             />
             {user.vehicleId !== "" && (
                 <>
-                    {user?.profile.permission.driver && (
+                    {user?.flDriver && (
                         <Screen
                             name="checkIndex"
                             component={CheckIndex}
@@ -56,7 +56,7 @@ export function AppRoutes() {
                             }}
                         />
                     )}
-                    {(user?.profile.permission.driver || user?.profile.permission.fillUpFuel) && (
+                    {(user?.flDriver || user?.flOperationalAssistant) && (
                         <Screen
                             name="refuel"
                             component={Refuel}
