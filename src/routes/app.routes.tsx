@@ -6,6 +6,8 @@ import { Refuel } from "@screens/logged/Refuel";
 import { FuelIcon, HomeIcon, ListChecksIcon } from "lucide-react-native";
 import { config } from "../../config/gluestack-ui.config";
 import { useAuth } from "@hooks/useAuth";
+import { useVehicles } from "@hooks/useVehicles";
+import { Loading } from "@components/Loading";
 
 type TAppRoutesProps = {
     dashboard: undefined;
@@ -20,6 +22,11 @@ const { Navigator, Screen } = createBottomTabNavigator<TAppRoutesProps>();
 export function AppRoutes() {
     const { tokens } = config;
     const { user } = useAuth();
+    const { isLoadingVehiclesFromStorage } = useVehicles();
+
+    if(isLoadingVehiclesFromStorage) {
+        return <Loading />
+    }
 
     return (
         <Navigator

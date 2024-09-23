@@ -26,7 +26,6 @@ export function RecoverPassword() {
                     arg1: values.email,
                 }),
             });
-            if (!response.data) throw new Error();
             if (response.data.responseHeader.responseStatus == "ERROR") {
                 throw new Error(response.data.responseHeader.message);
             }

@@ -2,9 +2,8 @@ import { AppContainer } from "@components/Layout/AppContainer";
 import { AppHeader } from "@components/Layout/AppHeader";
 import { ToastMessage } from "@components/ToastMessage";
 import { AlertCircleIcon, ButtonSpinner, ChevronDownIcon, FormControl, FormControlError, FormControlErrorIcon, FormControlErrorText, FormControlLabel, FormControlLabelText, Input, Select, SelectBackdrop, SelectContent, SelectDragIndicator, SelectDragIndicatorWrapper, SelectIcon, SelectInput, SelectItem, SelectPortal, SelectTrigger, VStack } from "@gluestack-ui/themed";
-import { Text, Center, Button, ButtonText, useToast } from "@gluestack-ui/themed";
+import { Button, ButtonText, useToast } from "@gluestack-ui/themed";
 import { initialValues, validationSchema } from "@utils/forms/app/checkIn";
-import * as ImagePicker from 'expo-image-picker';
 import { Formik } from "formik";
 import { useVehicles } from '@hooks/useVehicles';
 import { onlyNumbers, renderVehicleLabel } from "@utils/forms/mask";
@@ -14,11 +13,10 @@ import { SaveIcon } from "lucide-react-native";
 import { InputField } from "@gluestack-ui/themed";
 import { getDriverByCpf } from "@utils/fetchs/getDriver";
 import { api } from "@services/api";
-import { useEffect } from "react";
 
 export function CheckIn() {
     const toast = useToast();
-    const { user, setUser } = useAuth();
+    const { user, updateUser } = useAuth();
     const { vehicles } = useVehicles();
 
     async function handleSubmitCheckIn(values: typeof initialValues) {
@@ -42,7 +40,6 @@ export function CheckIn() {
             const response = await api.post("/vehicle/history/save", {
                 data: JSON.stringify(valuesToSend),
             });
-            if (!response.data) throw new Error();
 
             if (response.data.responseHeader.responseStatus == "ERROR") {
                 throw new Error(response.data.responseHeader.message);
@@ -50,10 +47,10 @@ export function CheckIn() {
 
             const data = JSON.parse(response.data.data);
 
-            setUser((prev) => ({
-                ...prev,
+            updateUser({
+                ...user,
                 checkedIn: true,
-            }));
+            })
 
             toast.show({
                 placement: 'top',

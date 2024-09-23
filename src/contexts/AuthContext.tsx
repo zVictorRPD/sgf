@@ -5,7 +5,7 @@ import React, { createContext, ReactNode, useEffect, useState } from "react";
 
 interface IAuthContext {
     user: IUser;
-    setUser: React.Dispatch<React.SetStateAction<IUser>>;
+    updateUser: (user: IUser) => Promise<void>;
     isLoadingUserData: boolean;
     signInUser: (user: IUser) => Promise<void>;
     signOutUser: () => Promise<void>;
@@ -33,6 +33,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         api.defaults.headers["company-id"] = "";
     }
 
+    async function updateUser(user: IUser) {
+        setUser(user);
+        await storageUserSave(user);
+    }
+
     async function loadUserData() {
         setIsLoadingUserData(true);
         try {
@@ -57,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     const authContextValues = {
         user,
-        setUser,
+        updateUser,
         isLoadingUserData,
         signInUser,
         signOutUser,

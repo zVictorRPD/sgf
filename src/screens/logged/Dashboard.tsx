@@ -9,21 +9,22 @@ import { Building2Icon, ChevronDownIcon, User2Icon, UserRoundCogIcon } from 'luc
 
 
 export function Dashboard() {
-    const { user, setUser } = useAuth();
+    const { user, updateUser } = useAuth();
     const { vehicles, isLoadingVehicles, loadVehicles } = useVehicles();
 
     const disableVehicleSelect = isLoadingVehicles || !user.operationalBaseId || user.checkedIn;
 
     function handleChangeOperationalBase(operationalBaseId: string) {
         loadVehicles(operationalBaseId);
-        setUser((prev) => ({
-            ...prev,
+        updateUser({
+            ...user,
             operationalBaseId,
             vehicleId: ""
-        }));
+        })
     }
 
-    
+    const selectedVehicle = vehicles.find((vehicle) => vehicle.vehicleId === user.vehicleId) || null;
+    const selectedOperationalBase = user.relationshipUserOperationalBases.find((relationship) => relationship.operationalBase.operationalBaseId === user.operationalBaseId) || null;
 
     return (
         <VStack flex={1}>
@@ -82,6 +83,7 @@ export function Dashboard() {
                         onValueChange={handleChangeOperationalBase}
                         selectedValue={user.operationalBaseId}
                         isDisabled={user.checkedIn}
+                        initialLabel={selectedOperationalBase ? selectedOperationalBase.operationalBase.description : "Selecione uma base"}
                     >
                         <SelectTrigger variant="outline" size="lg" >
                             <SelectInput placeholder="Selecione uma base" />
@@ -109,7 +111,13 @@ export function Dashboard() {
                         <FormControlLabelText>Veículos</FormControlLabelText>
                     </FormControlLabel>
                     <Select
-                        onValueChange={(vehicleId) => setUser((prev) => ({ ...prev, vehicleId }))}
+                        onValueChange={(vehicleId) => {
+                            updateUser({
+                                ...user,
+                                vehicleId
+                            })
+                        }}
+                        initialLabel={selectedVehicle ? renderVehicleLabel(selectedVehicle) : "Selecione um veículo"}
                         selectedValue={user?.vehicleId || null}
                         isDisabled={disableVehicleSelect}
                     >

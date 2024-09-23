@@ -17,7 +17,7 @@ import { api } from "@services/api";
 
 export function CheckOut() {
     const toast = useToast();
-    const { user, setUser } = useAuth();
+    const { user, updateUser } = useAuth();
     const { vehicles } = useVehicles();
 
     async function handleSubmitCheckOut(values: typeof initialValues) {
@@ -41,7 +41,6 @@ export function CheckOut() {
             const response = await api.post("/vehicle/history/save", {
                 data: JSON.stringify(valuesToSend),
             });
-            if (!response.data) throw new Error();
 
             if (response.data.responseHeader.responseStatus == "ERROR") {
                 throw new Error(response.data.responseHeader.message);
@@ -49,11 +48,11 @@ export function CheckOut() {
 
             const data = JSON.parse(response.data.data);
 
-            setUser((prev) => ({
-                ...prev,
+            updateUser({
+                ...user,
                 checkedIn: false,
                 vehicleId: "",
-            }));
+            });
 
             toast.show({
                 placement: 'top',

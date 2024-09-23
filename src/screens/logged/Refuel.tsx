@@ -13,13 +13,15 @@ import { floatToString, getDateTime, onlyNumbers, stringToDecimals } from '@util
 import { getDriverByCpf } from '@utils/fetchs/getDriver';
 import { useVehicles } from '@hooks/useVehicles';
 
+
 export function Refuel() {
     const { user } = useAuth();
     const {vehicles} = useVehicles();
     const [fuels, setFuels] = useState<IFuelTable[]>([]);
     const toast = useToast();
 
-    async function handleSubmitFuel(values: typeof initialValues) {
+    async function handleSubmitFuel(values: typeof initialValues, { resetForm }: any) {
+
         try {
             const vehicle = vehicles.find((vehicle) => vehicle.vehicleId === user?.vehicleId);
             const literValue = parseFloat(values.literValue)/100;
@@ -48,13 +50,13 @@ export function Refuel() {
             const response = await api.post("/fuel-supply-history/self/supply/save", {
                 data: JSON.stringify(formattedValues),
             });
-            if (!response.data) throw new Error();
-
             if (response.data.responseHeader.responseStatus == "ERROR") {
                 throw new Error(response.data.responseHeader.message);
             }
 
             const data = JSON.parse(response.data.data);
+
+            resetForm();
 
             toast.show({
                 placement: 'top',
@@ -83,8 +85,6 @@ export function Refuel() {
     async function getFuel() {
         try {
             const response = await api.get(`fuel-table/list`);
-            if (!response.data) throw new Error();
-
             if (response.data.responseHeader.responseStatus == "ERROR") {
                 throw new Error(response.data.responseHeader.message);
             }

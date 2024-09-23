@@ -25,7 +25,6 @@ export function SignIn() {
             const response = await api.post("/login", {
                 data: JSON.stringify(values),
             });
-            if (!response.data) throw new Error();
 
             if (response.data.responseHeader.responseStatus == "ERROR") {
                 throw new Error(response.data.responseHeader.message);
@@ -40,7 +39,6 @@ export function SignIn() {
             if(data?.relationshipUserOperationalBases.length === 0) {
                 throw new Error("Você não tem bases operacionais vinculadas ao seu usuário");
             }
-            console.log(data);
             
             await signInUser({
                 ...data,
