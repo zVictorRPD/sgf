@@ -3,7 +3,7 @@ import { AppHeader } from '@components/Layout/AppHeader';
 import { Box, FormControl, FormControlLabel, FormControlLabelText, Heading, HStack, Icon, Select, SelectBackdrop, SelectContent, SelectDragIndicator, SelectDragIndicatorWrapper, SelectIcon, SelectInput, SelectItem, SelectPortal, SelectTrigger, Text, VStack } from '@gluestack-ui/themed';
 import { useAuth } from '@hooks/useAuth';
 import { useVehicles } from '@hooks/useVehicles';
-import { IVehicle } from '@utils/interfaces/vehicle';
+import { renderVehicleLabel } from '@utils/forms/mask';
 import { Building2Icon, ChevronDownIcon, User2Icon, UserRoundCogIcon } from 'lucide-react-native';
 
 
@@ -12,7 +12,7 @@ export function Dashboard() {
     const { user, setUser } = useAuth();
     const { vehicles, isLoadingVehicles, loadVehicles } = useVehicles();
 
-    const disableVehicleSelect = isLoadingVehicles || !user.operationalBaseId;
+    const disableVehicleSelect = isLoadingVehicles || !user.operationalBaseId || user.checkedIn;
 
     function handleChangeOperationalBase(operationalBaseId: string) {
         loadVehicles(operationalBaseId);
@@ -23,9 +23,7 @@ export function Dashboard() {
         }));
     }
 
-    function renderVehicleLabel(vehicle: IVehicle) {
-        return `${vehicle.brand.name || "marca não informada"} - ${vehicle.vehicleModel.model || "modelo não informado"} - ${vehicle.plate || "placa não informada"}`;
-    }
+    
 
     return (
         <VStack flex={1}>
@@ -83,6 +81,7 @@ export function Dashboard() {
                     <Select
                         onValueChange={handleChangeOperationalBase}
                         selectedValue={user.operationalBaseId}
+                        isDisabled={user.checkedIn}
                     >
                         <SelectTrigger variant="outline" size="lg" >
                             <SelectInput placeholder="Selecione uma base" />

@@ -56,7 +56,7 @@ export function AppRoutes() {
                             }}
                         />
                     )}
-                    {(user?.flDriver || user?.flOperationalAssistant) && (
+                    {((user?.flDriver && user?.checkedIn) || user?.flOperationalAssistant) && (
                         <Screen
                             name="refuel"
                             component={Refuel}

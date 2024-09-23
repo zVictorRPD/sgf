@@ -9,28 +9,44 @@ import { ToastMessage } from '@components/ToastMessage';
 import { ChevronDownIcon, SaveIcon } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { IFuelTable } from '@utils/interfaces/fuel';
-import { floatToString, onlyNumbers, stringToDecimals } from '@utils/forms/mask';
+import { floatToString, getDateTime, onlyNumbers, stringToDecimals } from '@utils/forms/mask';
 import { getDriverByCpf } from '@utils/fetchs/getDriver';
+import { useVehicles } from '@hooks/useVehicles';
 
 export function Refuel() {
     const { user } = useAuth();
+    const {vehicles} = useVehicles();
     const [fuels, setFuels] = useState<IFuelTable[]>([]);
     const toast = useToast();
 
     async function handleSubmitFuel(values: typeof initialValues) {
         try {
-            const driver = await getDriverByCpf(user.cpf);
-            console.log(driver);
-            
-            console.log({
-                ...values,
-                vehicleId: user?.vehicleId,
-                literValue: parseFloat(values.literValue),
-            });
+            const vehicle = vehicles.find((vehicle) => vehicle.vehicleId === user?.vehicleId);
+            const literValue = parseFloat(values.literValue)/100;
+            const literAmount = parseInt(values.literAmount);
 
-            return;
-            const response = await api.post("/login", {
-                data: JSON.stringify(values),
+            let formattedValues = {
+                ...values,
+                literAmout: literAmount,
+                vehicleId: user?.vehicleId,
+                plate: vehicle?.plate,
+                literValue: literValue,
+                supplierId: null,
+                driverId: null,
+                operationalAssistantId: null,
+                supplyDate: getDateTime(),
+                amountPaid: literAmount * literValue,
+            } as any;
+            
+            if(user.flDriver) {
+                const driver = await getDriverByCpf(user.cpf);
+                formattedValues.driverId = driver.driverId;
+            } else {
+                formattedValues.operationalAssistantId = user.userId
+            }
+
+            const response = await api.post("/fuel-supply-history/self/supply/save", {
+                data: JSON.stringify(formattedValues),
             });
             if (!response.data) throw new Error();
 
@@ -158,7 +174,7 @@ export function Refuel() {
                             </FormControl>
                             <FormControl
                                 size="lg"
-                                isInvalid={errors.milage && touched.milage ? true : false}
+                                isInvalid={errors.mileage && touched.mileage ? true : false}
                             >
                                 <FormControlLabel>
                                     <FormControlLabelText>Quilometragem</FormControlLabelText>
@@ -171,9 +187,9 @@ export function Refuel() {
                                         placeholder="Quilometragem do veículo"
                                         keyboardType="number-pad"
                                         autoCapitalize="none"
-                                        onChangeText={(value) => setFieldValue("milage", onlyNumbers(value))}
-                                        onBlur={handleBlur("milage")}
-                                        value={values.milage}
+                                        onChangeText={(value) => setFieldValue("mileage", onlyNumbers(value))}
+                                        onBlur={handleBlur("mileage")}
+                                        value={values.mileage}
                                     />
                                 </Input>
                                 <FormControlError>
@@ -182,7 +198,7 @@ export function Refuel() {
                                         as={AlertCircleIcon}
                                     />
                                     <FormControlErrorText>
-                                        {errors?.milage}
+                                        {errors?.mileage}
                                     </FormControlErrorText>
                                 </FormControlError>
                             </FormControl>

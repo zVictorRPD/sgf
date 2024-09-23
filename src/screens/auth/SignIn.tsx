@@ -45,7 +45,8 @@ export function SignIn() {
             await signInUser({
                 ...data,
                 vehicleId: "",
-                operationalBaseId: ""
+                operationalBaseId: "",
+                checkedIn: false,
             });
 
             toast.show({

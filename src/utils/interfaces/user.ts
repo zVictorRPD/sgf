@@ -7,6 +7,7 @@ export interface IUser {
     operationalBaseId: string;
     flDriver: boolean;
     flOperationalAssistant: boolean;
+    checkedIn: boolean;
 
     company: ICompany;
     profile: IProfile;
