@@ -11,6 +11,6 @@ export async function getDriverByCpf(cpf: string) {
 
         return data;
     } catch (error: any) {
-        throw new Error(error?.message || "Ocorreu um erro interno, tente novamente mais tarde");
+        throw new Error("Ocorreu um erro interno, tente novamente mais tarde");
     }
 }

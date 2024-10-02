@@ -1,8 +1,8 @@
 import { AppContainer } from '@components/Layout/AppContainer';
 import { AppHeader } from '@components/Layout/AppHeader';
-import { AlertCircleIcon, Button, ButtonIcon, ButtonSpinner, ButtonText, FormControl, FormControlError, FormControlErrorIcon, FormControlErrorText, FormControlLabel, FormControlLabelText, Input, InputField, Select, SelectBackdrop, SelectContent, SelectDragIndicator, SelectDragIndicatorWrapper, SelectIcon, SelectInput, SelectItem, SelectPortal, SelectTrigger, Text, useToast, View, VStack } from '@gluestack-ui/themed';
+import { AlertCircleIcon, Button, ButtonIcon, ButtonSpinner, ButtonText, FormControl, FormControlError, FormControlErrorIcon, FormControlErrorText, FormControlLabel, FormControlLabelText, Input, InputField, Select, SelectBackdrop, SelectContent, SelectDragIndicator, SelectDragIndicatorWrapper, SelectIcon, SelectInput, SelectItem, SelectPortal, SelectTrigger, set, Text, useToast, View, VStack } from '@gluestack-ui/themed';
 import { useAuth } from '@hooks/useAuth';
-import { Formik } from 'formik';
+import { useFormik } from 'formik';
 import { initialValues, validationSchema } from '@utils/forms/app/fuel';
 import { api } from '@services/api';
 import { ToastMessage } from '@components/ToastMessage';
@@ -16,16 +16,23 @@ import { useVehicles } from '@hooks/useVehicles';
 
 export function Refuel() {
     const { user } = useAuth();
-    const {vehicles} = useVehicles();
-    const [fuels, setFuels] = useState<IFuelTable[]>([]);
+    const { vehicles } = useVehicles();
     const toast = useToast();
+    const [fuels, setFuels] = useState<IFuelTable[]>([]);
 
-    async function handleSubmitFuel(values: typeof initialValues, { resetForm }: any) {
+    const formik = useFormik({
+        initialValues,
+        validationSchema,
+        onSubmit: handleSubmitFuel,
+    })
+
+
+    async function handleSubmitFuel(values: typeof initialValues) {
 
         try {
             const vehicle = vehicles.find((vehicle) => vehicle.vehicleId === user?.vehicleId);
-            const literValue = parseFloat(values.literValue)/100;
-            const literAmount = parseInt(values.literAmount);
+            const literValue = parseFloat(values.literValue) / 100;
+            const literAmount = 0;
 
             let formattedValues = {
                 ...values,
@@ -39,14 +46,16 @@ export function Refuel() {
                 supplyDate: getDateTime(),
                 amountPaid: literAmount * literValue,
             } as any;
-            
-            if(user.flDriver) {
+
+            if (user.flDriver) {
                 const driver = await getDriverByCpf(user.cpf);
                 formattedValues.driverId = driver.driverId;
             } else {
                 formattedValues.operationalAssistantId = user.userId
             }
+            console.log(formattedValues);
 
+            return;
             const response = await api.post("/fuel-supply-history/self/supply/save", {
                 data: JSON.stringify(formattedValues),
             });
@@ -56,7 +65,7 @@ export function Refuel() {
 
             const data = JSON.parse(response.data.data);
 
-            resetForm();
+            formik.resetForm();
 
             toast.show({
                 placement: 'top',
@@ -69,13 +78,14 @@ export function Refuel() {
             });
 
         } catch (error: any) {
+            const errorMessage = error.message !== undefined ? error.message : "Ocorreu um erro interno, tente novamente mais tarde";
             toast.show({
                 placement: 'top',
                 render: ({ id }) => (<ToastMessage
                     id={id}
                     action="error"
                     title="Erro ao registrar abastecimento"
-                    description={error?.message || "Ocorreu um erro interno, tente novamente mais tarde"}
+                    description={errorMessage}
                     onClose={() => toast.close(id)}
                 />)
             });
@@ -91,25 +101,25 @@ export function Refuel() {
 
             const data = JSON.parse(response.data.data);
             setFuels(data);
-
         } catch (error: any) {
+            const errorMessage = error.message !== undefined ? error.message : "Ocorreu um erro interno, tente novamente mais tarde";
             toast.show({
                 placement: 'top',
                 render: ({ id }) => (<ToastMessage
                     id={id}
                     action="error"
                     title="Erro ao buscar tipo de combustível"
-                    description={error?.message || "Ocorreu um erro interno, tente novamente mais tarde"}
+                    description={errorMessage}
                     onClose={() => toast.close(id)}
                 />)
             });
         }
     }
 
-    function handleChangeFuelType(value: string, setFieldValue: any) {
+    function handleChangeFuelType(value: string) {
         const fuel = fuels.find((fuel) => fuel.fuelTableId === value);
         if (!fuel) return;
-        setFieldValue("literValue", floatToString(fuel.literValue));
+        formik.setFieldValue("literValue", floatToString(fuel.literValue));
     }
 
     useEffect(() => {
@@ -119,168 +129,194 @@ export function Refuel() {
         <VStack flex={1}>
             <AppHeader title="Abastecer" />
             <AppContainer>
-                <Formik
-                    initialValues={initialValues}
-                    onSubmit={handleSubmitFuel}
-                    validationSchema={validationSchema}
+                <VStack
+                    gap={16}
                 >
-                    {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting, setFieldValue }) => (
-                        <VStack
-                            gap={16}
+                    <FormControl
+                        size="lg"
+                        isInvalid={formik.errors.fuelTableId && formik.touched.fuelTableId ? true : false}
+                    >
+                        <FormControlLabel>
+                            <FormControlLabelText>Tipo de combustível</FormControlLabelText>
+                        </FormControlLabel>
+                        <Select
+                            onValueChange={(value) => {
+                                formik.setFieldValue("fuelTableId", value);
+                                handleChangeFuelType(value);
+                            }}
+                            selectedValue={formik.values.fuelTableId}
                         >
-                            <FormControl
-                                size="lg"
-                                isInvalid={errors.fuelTableId && touched.fuelTableId ? true : false}
-                            >
-                                <FormControlLabel>
-                                    <FormControlLabelText>Tipo de combustível</FormControlLabelText>
-                                </FormControlLabel>
-                                <Select
-                                    onValueChange={(value) => {
-                                        setFieldValue("fuelTableId", value);
-                                        handleChangeFuelType(value, setFieldValue);
-                                    }}
-                                    selectedValue={values.fuelTableId}
-                                >
-                                    <SelectTrigger variant="outline" size="xl" >
-                                        <SelectInput placeholder="Selecione um tipo de combustível" />
-                                        <SelectIcon as={ChevronDownIcon} style={{ marginRight: 6 }} />
-                                    </SelectTrigger>
-                                    <SelectPortal>
-                                        <SelectBackdrop />
-                                        <SelectContent>
-                                            <SelectDragIndicatorWrapper>
-                                                <SelectDragIndicator />
-                                            </SelectDragIndicatorWrapper>
-                                            {fuels.map((fuel) => (
-                                                <SelectItem
-                                                    key={fuel.fuelTableId}
-                                                    label={fuel.fuel.fuel}
-                                                    value={fuel.fuelTableId}
-                                                />
-                                            ))}
-                                        </SelectContent>
-                                    </SelectPortal>
-                                </Select>
-                                <FormControlError>
-                                    <FormControlErrorIcon
-                                        fontSize={10}
-                                        as={AlertCircleIcon}
-                                    />
-                                    <FormControlErrorText>
-                                        {errors?.fuelTableId}
-                                    </FormControlErrorText>
-                                </FormControlError>
-                            </FormControl>
-                            <FormControl
-                                size="lg"
-                                isInvalid={errors.mileage && touched.mileage ? true : false}
-                            >
-                                <FormControlLabel>
-                                    <FormControlLabelText>Quilometragem</FormControlLabelText>
-                                </FormControlLabel>
-                                <Input
-                                    size="xl"
-                                >
-                                    <InputField
-                                        type="text"
-                                        placeholder="Quilometragem do veículo"
-                                        keyboardType="number-pad"
-                                        autoCapitalize="none"
-                                        onChangeText={(value) => setFieldValue("mileage", onlyNumbers(value))}
-                                        onBlur={handleBlur("mileage")}
-                                        value={values.mileage}
-                                    />
-                                </Input>
-                                <FormControlError>
-                                    <FormControlErrorIcon
-                                        fontSize={10}
-                                        as={AlertCircleIcon}
-                                    />
-                                    <FormControlErrorText>
-                                        {errors?.mileage}
-                                    </FormControlErrorText>
-                                </FormControlError>
-                            </FormControl>
-                            <FormControl
-                                size="lg"
-                                isInvalid={errors.literAmount && touched.literAmount ? true : false}
-                            >
-                                <FormControlLabel>
-                                    <FormControlLabelText>Quantidade abastecida</FormControlLabelText>
-                                </FormControlLabel>
-                                <Input
-                                    size="xl"
-                                >
-                                    <InputField
-                                        type="text"
-                                        placeholder="Quantidade de litros"
-                                        keyboardType="number-pad"
-                                        autoCapitalize="none"
-                                        onChangeText={(value) => setFieldValue("literAmount", onlyNumbers(value))}
-                                        onBlur={handleBlur("literAmount")}
-                                        value={values.literAmount}
-                                    />
-                                </Input>
-                                <FormControlError>
-                                    <FormControlErrorIcon
-                                        fontSize={10}
-                                        as={AlertCircleIcon}
-                                    />
-                                    <FormControlErrorText>
-                                        {errors?.literAmount}
-                                    </FormControlErrorText>
-                                </FormControlError>
-                            </FormControl>
-                            <FormControl
-                                size="lg"
-                                isInvalid={errors.literValue && touched.literValue ? true : false}
+                            <SelectTrigger variant="outline" size="xl" >
+                                <SelectInput placeholder="Selecione um tipo de combustível" />
+                                <SelectIcon as={ChevronDownIcon} style={{ marginRight: 6 }} />
+                            </SelectTrigger>
+                            <SelectPortal>
+                                <SelectBackdrop />
+                                <SelectContent>
+                                    <SelectDragIndicatorWrapper>
+                                        <SelectDragIndicator />
+                                    </SelectDragIndicatorWrapper>
+                                    {fuels.map((fuel) => (
+                                        <SelectItem
+                                            key={fuel.fuelTableId}
+                                            label={fuel.fuel.fuel}
+                                            value={fuel.fuelTableId}
+                                        />
+                                    ))}
+                                </SelectContent>
+                            </SelectPortal>
+                        </Select>
+                        <FormControlError>
+                            <FormControlErrorIcon
+                                fontSize={10}
+                                as={AlertCircleIcon}
+                            />
+                            <FormControlErrorText>
+                                {formik.errors?.fuelTableId}
+                            </FormControlErrorText>
+                        </FormControlError>
+                    </FormControl>
+                    <FormControl
+                        size="lg"
+                        isInvalid={formik.errors.mileage && formik.touched.mileage ? true : false}
+                    >
+                        <FormControlLabel>
+                            <FormControlLabelText>Quilometragem</FormControlLabelText>
+                        </FormControlLabel>
+                        <Input
+                            size="xl"
+                        >
+                            <InputField
+                                type="text"
+                                placeholder="Quilometragem do veículo"
+                                keyboardType="number-pad"
+                                autoCapitalize="none"
+                                onChangeText={(value) => formik.setFieldValue("mileage", onlyNumbers(value))}
+                                onBlur={formik.handleBlur("mileage")}
+                                value={formik.values.mileage}
+                            />
+                        </Input>
+                        <FormControlError>
+                            <FormControlErrorIcon
+                                fontSize={10}
+                                as={AlertCircleIcon}
+                            />
+                            <FormControlErrorText>
+                                {formik.errors?.mileage}
+                            </FormControlErrorText>
+                        </FormControlError>
+                    </FormControl>
+                    <FormControl 
+                        size="lg"
+                        isInvalid={formik.errors.initialOdometer && formik.touched.initialOdometer ? true : false}
+                    >
+                        <FormControlLabel>
+                            <FormControlLabelText>Hodômetro inicial da bomba</FormControlLabelText>
+                        </FormControlLabel>
+                        <Input
+                            size="xl"
+                        >
+                            <InputField
+                                type="text"
+                                placeholder="Hodômetro inicial da bomba"
+                                keyboardType="number-pad"
+                                autoCapitalize="none"
+                                onChangeText={(value) => formik.setFieldValue("initialOdometer", onlyNumbers(value))}
+                                onBlur={formik.handleBlur("initialOdometer")}
+                                value={formik.values.initialOdometer}
+                            />
+                        </Input>
+                        <FormControlError>
+                            <FormControlErrorIcon
+                                fontSize={10}
+                                as={AlertCircleIcon}
+                            />
+                            <FormControlErrorText>
+                                {formik.errors?.initialOdometer}
+                            </FormControlErrorText>
+                        </FormControlError>
+                    </FormControl>
+                    <FormControl
+                        size="lg"
+                        isInvalid={formik.errors.finalOdometer && formik.touched.finalOdometer ? true : false}
+                    >
+                        <FormControlLabel>
+                            <FormControlLabelText>Hodômetro final da bomba</FormControlLabelText>
+                        </FormControlLabel>
+                        <Input
+                            size="xl"
+                            isDisabled={formik.values.initialOdometer === ""}
+                        >
+                            <InputField
+                                type="text"
+                                placeholder="Hodômetro final da bomba"
+                                keyboardType="number-pad"
+                                autoCapitalize="none"
+                                onChangeText={(value) => formik.setFieldValue("finalOdometer", onlyNumbers(value))}
+                                onBlur={formik.handleBlur("finalOdometer")}
+                                value={formik.values.finalOdometer}
+                            />
+                        </Input>
+                        <FormControlError>
+                            <FormControlErrorIcon
+                                fontSize={10}
+                                as={AlertCircleIcon}
+                            />
+                            <FormControlErrorText>
+                                {formik.errors?.finalOdometer}
+                            </FormControlErrorText>
+                        </FormControlError>
+                    </FormControl>
+                    <FormControl
+                        size="lg"
+                        isInvalid={formik.errors.literValue && formik.touched.literValue ? true : false}
 
-                            >
-                                <FormControlLabel>
-                                    <FormControlLabelText>Valor do litro</FormControlLabelText>
-                                </FormControlLabel>
-                                <Input
-                                    size="xl"
-                                    isDisabled
-                                >
-                                    <InputField
-                                        type="text"
-                                        keyboardType="number-pad"
-                                        autoCapitalize="none"
-                                        onChangeText={handleChange("literValue")}
-                                        onBlur={handleBlur("literValue")}
-                                        value={stringToDecimals(values.literValue)}
-                                    />
-                                </Input>
-                                <FormControlError>
-                                    <FormControlErrorIcon
-                                        fontSize={10}
-                                        as={AlertCircleIcon}
-                                    />
-                                    <FormControlErrorText>
-                                        {errors?.literValue}
-                                    </FormControlErrorText>
-                                </FormControlError>
-                            </FormControl>
+                    >
+                        <FormControlLabel>
+                            <FormControlLabelText>Valor do litro</FormControlLabelText>
+                        </FormControlLabel>
+                        <Input
+                            size="xl"
+                            isDisabled
+                        >
+                            <InputField
+                                type="text"
+                                keyboardType="number-pad"
+                                autoCapitalize="none"
+                                onChangeText={formik.handleChange("literValue")}
+                                onBlur={formik.handleBlur("literValue")}
+                                value={stringToDecimals(formik.values.literValue)}
+                            />
+                        </Input>
+                        <FormControlError>
+                            <FormControlErrorIcon
+                                fontSize={10}
+                                as={AlertCircleIcon}
+                            />
+                            <FormControlErrorText>
+                                {formik.errors?.literValue}
+                            </FormControlErrorText>
+                        </FormControlError>
+                    </FormControl>
 
-                            <Button
-                                size="md"
-                                variant="solid"
-                                action="primary"
-                                gap={8}
-                                isDisabled={isSubmitting}
-                                onPress={() => handleSubmit()}
-                            >
-                                <>
-                                    <ButtonText>{!isSubmitting ? "Salvar" : "Salvando"}</ButtonText>
-                                    {!isSubmitting ? <ButtonIcon as={SaveIcon} /> : <ButtonSpinner />}
-                                </>
-                            </Button>
-                        </VStack>
-                    )}
-                </Formik>
+                    <Button
+                        size="md"
+                        variant="solid"
+                        action="primary"
+                        gap={8}
+                        isDisabled={formik.isSubmitting}
+                        onPress={
+                            () => formik.handleSubmit()
+                        }
+                    >
+                        <>
+                            <ButtonText>{!formik.isSubmitting ? "Salvar" : "Salvando"}</ButtonText>
+                            {!formik.isSubmitting ? <ButtonIcon as={SaveIcon} /> : <ButtonSpinner />}
+                        </>
+                    </Button>
+                </VStack>
+
             </AppContainer>
-        </VStack>
+        </VStack >
     );
 }

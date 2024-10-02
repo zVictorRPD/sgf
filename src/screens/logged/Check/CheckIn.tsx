@@ -63,13 +63,14 @@ export function CheckIn() {
             });
 
         } catch (error: any) {
+            const errorMessage = error.message !== undefined ? error.message : "Ocorreu um erro interno, tente novamente mais tarde";
             toast.show({
                 placement: 'top',
                 render: ({ id }) => (<ToastMessage
                     id={id}
                     action="error"
                     title="Erro ao registrar check-in"
-                    description={error?.message || "Ocorreu um erro interno, tente novamente mais tarde"}
+                    description={errorMessage}
                     onClose={() => toast.close(id)}
                 />)
             });

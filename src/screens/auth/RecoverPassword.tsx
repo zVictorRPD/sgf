@@ -43,13 +43,14 @@ export function RecoverPassword() {
             });
 
         } catch (error: any) {
+            const errorMessage = error.message !== undefined ? error.message : "Ocorreu um erro interno, tente novamente mais tarde";
             toast.show({
                 placement: 'top',
                 render: ({ id }) => (<ToastMessage
                     id={id}
                     action="error"
                     title="Erro ao enviar e-mail"
-                    description={error?.message || "Ocorreu um erro interno, tente novamente mais tarde"}
+                    description={errorMessage}
                     onClose={() => toast.close(id)}
                 />)
             });

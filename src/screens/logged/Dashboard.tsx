@@ -5,12 +5,16 @@ import { useAuth } from '@hooks/useAuth';
 import { useVehicles } from '@hooks/useVehicles';
 import { renderVehicleLabel } from '@utils/forms/mask';
 import { Building2Icon, ChevronDownIcon, User2Icon, UserRoundCogIcon } from 'lucide-react-native';
-
+import { useState } from 'react';
+import { StyleSheet } from 'react-native';
+import { Dropdown } from 'react-native-element-dropdown';
 
 
 export function Dashboard() {
     const { user, updateUser } = useAuth();
     const { vehicles, isLoadingVehicles, loadVehicles } = useVehicles();
+    const [isFocus, setIsFocus] = useState(false);
+
 
     const disableVehicleSelect = isLoadingVehicles || !user.operationalBaseId || user.checkedIn;
 
@@ -23,7 +27,11 @@ export function Dashboard() {
         })
     }
 
-    const selectedVehicle = vehicles.find((vehicle) => vehicle.vehicleId === user.vehicleId) || null;
+    const data = vehicles.map((vehicle) => ({
+        label: renderVehicleLabel(vehicle),
+        value: vehicle.vehicleId,
+    }));
+
     const selectedOperationalBase = user.relationshipUserOperationalBases.find((relationship) => relationship.operationalBase.operationalBaseId === user.operationalBaseId) || null;
 
     return (
@@ -110,37 +118,36 @@ export function Dashboard() {
                     <FormControlLabel>
                         <FormControlLabelText>Veículos</FormControlLabelText>
                     </FormControlLabel>
-                    <Select
-                        onValueChange={(vehicleId) => {
+                    <Dropdown
+                        style={[
+                            styles.dropdown, 
+                            isFocus && { borderColor: 'blue' },
+                            disableVehicleSelect && { opacity: 0.4, pointerEvents: 'none'}
+                        ]}
+                        placeholderStyle={styles.placeholderStyle}
+                        selectedTextStyle={styles.selectedTextStyle}
+                        inputSearchStyle={styles.inputSearchStyle}
+                        iconStyle={styles.iconStyle}
+                        data={data}
+                        search
+                        maxHeight={300}
+                        labelField="label"
+                        valueField="value"
+                        placeholder={!isFocus ? 'Selecione um veículo' : '...'}
+                        searchPlaceholder="Digite a placa..."
+                        value={user?.vehicleId}
+                        disable={disableVehicleSelect}
+                        onFocus={() => setIsFocus(true)}
+                        onBlur={() => setIsFocus(false)}
+                        onChange={item => {
                             updateUser({
                                 ...user,
-                                vehicleId
+                                vehicleId: item.value
                             })
+                            setIsFocus(false);
                         }}
-                        initialLabel={selectedVehicle ? renderVehicleLabel(selectedVehicle) : "Selecione um veículo"}
-                        selectedValue={user?.vehicleId || null}
-                        isDisabled={disableVehicleSelect}
-                    >
-                        <SelectTrigger variant="outline" size="lg" >
-                            <SelectInput placeholder="Selecione um veículo" />
-                            <SelectIcon as={ChevronDownIcon} style={{ marginRight: 6 }} />
-                        </SelectTrigger>
-                        <SelectPortal>
-                            <SelectBackdrop />
-                            <SelectContent>
-                                <SelectDragIndicatorWrapper>
-                                    <SelectDragIndicator />
-                                </SelectDragIndicatorWrapper>
-                                {vehicles.map((vehicle) => (
-                                    <SelectItem
-                                        key={vehicle.vehicleId}
-                                        label={renderVehicleLabel(vehicle)}
-                                        value={vehicle.vehicleId}
-                                    />
-                                ))}
-                            </SelectContent>
-                        </SelectPortal>
-                    </Select>
+                        
+                    />
                 </FormControl>
 
 
@@ -148,3 +155,35 @@ export function Dashboard() {
         </VStack>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        backgroundColor: 'white',
+        padding: 16,
+    },
+    dropdown: {
+        height: 50,
+        borderColor: 'gray',
+        borderWidth: 0.5,
+        borderRadius: 8,
+        paddingHorizontal: 8,
+        
+    },
+    icon: {
+        marginRight: 5,
+    },
+    placeholderStyle: {
+        fontSize: 18,
+    },
+    selectedTextStyle: {
+        fontSize: 18,
+    },
+    iconStyle: {
+        width: 20,
+        height: 20,
+    },
+    inputSearchStyle: {
+        height: 40,
+        fontSize: 16,
+    },
+});
