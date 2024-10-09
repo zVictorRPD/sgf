@@ -70,6 +70,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setIsLoadingVehiclesFromStorage(true);
         try {
             const vehicles = await storageVehiclesGet();
+
             if (vehicles.length) {
                 setVehicles(vehicles);
             }

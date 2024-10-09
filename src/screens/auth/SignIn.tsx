@@ -10,6 +10,8 @@ import { api } from "@services/api"
 import { useToast } from "@gluestack-ui/themed"
 import { ToastMessage } from "@components/ToastMessage"
 import { useAuth } from "@hooks/useAuth"
+import { getDriverByCpf } from "@utils/fetchs/getDriver"
+import { storageVehiclesSave } from "@storage/storageVehicles"
 
 export function SignIn() {
     const { navigate } = useNavigation<TAuthNavigatorRoutesProps>();
@@ -39,12 +41,40 @@ export function SignIn() {
             if(data?.relationshipUserOperationalBases.length === 0) {
                 throw new Error("Você não tem bases operacionais vinculadas ao seu usuário");
             }
-            
+
+            let userVehicleData = {
+                operationalBaseId: "",
+                vehicleId: "",
+                checkedIn: false,
+            }
+
+            if(data.flDriver){
+                const driver = await getDriverByCpf(data.cpf, data.company.companyId, data.userId);
+
+                const isDriverCheckedResponse = await api.get(`/check-in/control/driver/id?driverId=${driver.driverId}`, {
+                    headers: {
+                        "user-id": data.userId,
+                        "company-id": data.company.companyId,
+                    }
+                });
+
+                const isDriverChecked = JSON.parse(isDriverCheckedResponse.data.data);
+
+                if(isDriverChecked !== null) {
+                    await storageVehiclesSave([isDriverChecked]);
+                    console.log(isDriverChecked);
+                    
+                    userVehicleData = {
+                        operationalBaseId: isDriverChecked.operationalBaseId,
+                        vehicleId: isDriverChecked.vehicleId,
+                        checkedIn: true,
+                    }
+                }
+            }
+
             await signInUser({
                 ...data,
-                vehicleId: "",
-                operationalBaseId: "",
-                checkedIn: false,
+                ...userVehicleData,
             });
 
             toast.show({

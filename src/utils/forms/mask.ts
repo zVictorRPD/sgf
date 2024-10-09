@@ -17,7 +17,7 @@ export function onlyNumbers(value: string): string {
 }
 
 export function renderVehicleLabel(vehicle: IVehicle) {
-    return `${vehicle.plate || "placa não informada"} - ${vehicle.brand.name || "marca não informada"} - ${vehicle.vehicleModel.model || "modelo não informado"}`;
+    return `${vehicle?.plate || "placa não informada"} - ${vehicle?.brand?.name || "marca não informada"} - ${vehicle?.vehicleModel?.model || "modelo não informado"}`;
 }
 
 export function getDateTime(){

@@ -38,7 +38,7 @@ export function CheckOut() {
                 }
             }
 
-            const response = await api.post("/vehicle/history/save", {
+            const response = await api.post("/check-out/control/check-out", {
                 data: JSON.stringify(valuesToSend),
             });
 

@@ -37,7 +37,7 @@ export function CheckIn() {
                 }
             }
 
-            const response = await api.post("/vehicle/history/save", {
+            const response = await api.post("/check-in/control/check-in", {
                 data: JSON.stringify(valuesToSend),
             });
 

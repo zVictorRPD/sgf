@@ -1,8 +1,18 @@
 import { api } from "@services/api";
 
-export async function getDriverByCpf(cpf: string) {
+export async function getDriverByCpf(cpf: string, companyId: string = "", userId: string = "") {
+    let requestHeaders = {};
+
+    if (companyId !== '' && userId !== '') {
+        requestHeaders = {
+            headers: {
+                "user-id": userId,
+                "company-id": companyId,
+            },
+        }
+    }
     try {
-        const response = await api.get(`/driver/cpf?cpf=${cpf}`);
+        const response = await api.get(`/driver/cpf?cpf=${cpf}`, requestHeaders);
 
         if (response.data.responseHeader.responseStatus == "ERROR") {
             throw new Error(response.data.responseHeader.message);
