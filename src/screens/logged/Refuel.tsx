@@ -32,19 +32,21 @@ export function Refuel() {
         try {
             const vehicle = vehicles.find((vehicle) => vehicle.vehicleId === user?.vehicleId);
             const literValue = parseFloat(values.literValue) / 100;
-            const literAmount = 0;
+            const literAmount = parseInt(values.fuelPumpFinalOdometer) - parseInt(values.fuelPumpInitialOdometer);
+            const amountPaid = Number((literAmount * literValue).toFixed(2));
 
             let formattedValues = {
                 ...values,
-                literAmout: literAmount,
+                amountPaid: amountPaid,
+                driverId: null,
+                literAmount: literAmount,
+                literValue: literValue,
+                mileage: parseInt(values.mileage),
                 vehicleId: user?.vehicleId,
                 plate: vehicle?.plate,
-                literValue: literValue,
                 supplierId: null,
-                driverId: null,
                 operationalAssistantId: null,
                 supplyDate: getDateTime(),
-                amountPaid: literAmount * literValue,
             } as any;
 
             if (user.flDriver) {
@@ -53,9 +55,7 @@ export function Refuel() {
             } else {
                 formattedValues.operationalAssistantId = user.userId
             }
-            console.log(formattedValues);
 
-            return;
             const response = await api.post("/fuel-supply-history/self/supply/save", {
                 data: JSON.stringify(formattedValues),
             });
@@ -120,6 +120,13 @@ export function Refuel() {
         const fuel = fuels.find((fuel) => fuel.fuelTableId === value);
         if (!fuel) return;
         formik.setFieldValue("literValue", floatToString(fuel.literValue));
+    }
+
+    function literAmountValue() {
+        if(formik.values.fuelPumpInitialOdometer === "" || formik.values.fuelPumpFinalOdometer === "") return "0";
+        if(parseInt(formik.values.fuelPumpInitialOdometer) > parseInt(formik.values.fuelPumpFinalOdometer)) return "0";
+
+        return String(parseInt(formik.values.fuelPumpFinalOdometer) - parseInt(formik.values.fuelPumpInitialOdometer));
     }
 
     useEffect(() => {
@@ -208,7 +215,7 @@ export function Refuel() {
                     </FormControl>
                     <FormControl 
                         size="lg"
-                        isInvalid={formik.errors.initialOdometer && formik.touched.initialOdometer ? true : false}
+                        isInvalid={formik.errors.fuelPumpInitialOdometer && formik.touched.fuelPumpInitialOdometer ? true : false}
                     >
                         <FormControlLabel>
                             <FormControlLabelText>Hodômetro inicial da bomba</FormControlLabelText>
@@ -221,9 +228,9 @@ export function Refuel() {
                                 placeholder="Hodômetro inicial da bomba"
                                 keyboardType="number-pad"
                                 autoCapitalize="none"
-                                onChangeText={(value) => formik.setFieldValue("initialOdometer", onlyNumbers(value))}
-                                onBlur={formik.handleBlur("initialOdometer")}
-                                value={formik.values.initialOdometer}
+                                onChangeText={(value) => formik.setFieldValue("fuelPumpInitialOdometer", onlyNumbers(value))}
+                                onBlur={formik.handleBlur("fuelPumpInitialOdometer")}
+                                value={formik.values.fuelPumpInitialOdometer}
                             />
                         </Input>
                         <FormControlError>
@@ -232,29 +239,29 @@ export function Refuel() {
                                 as={AlertCircleIcon}
                             />
                             <FormControlErrorText>
-                                {formik.errors?.initialOdometer}
+                                {formik.errors?.fuelPumpInitialOdometer}
                             </FormControlErrorText>
                         </FormControlError>
                     </FormControl>
                     <FormControl
                         size="lg"
-                        isInvalid={formik.errors.finalOdometer && formik.touched.finalOdometer ? true : false}
+                        isInvalid={formik.errors.fuelPumpFinalOdometer && formik.touched.fuelPumpFinalOdometer ? true : false}
                     >
                         <FormControlLabel>
                             <FormControlLabelText>Hodômetro final da bomba</FormControlLabelText>
                         </FormControlLabel>
                         <Input
                             size="xl"
-                            isDisabled={formik.values.initialOdometer === ""}
+                            isDisabled={formik.values.fuelPumpInitialOdometer === ""}
                         >
                             <InputField
                                 type="text"
                                 placeholder="Hodômetro final da bomba"
                                 keyboardType="number-pad"
                                 autoCapitalize="none"
-                                onChangeText={(value) => formik.setFieldValue("finalOdometer", onlyNumbers(value))}
-                                onBlur={formik.handleBlur("finalOdometer")}
-                                value={formik.values.finalOdometer}
+                                onChangeText={(value) => formik.setFieldValue("fuelPumpFinalOdometer", onlyNumbers(value))}
+                                onBlur={formik.handleBlur("fuelPumpFinalOdometer")}
+                                value={formik.values.fuelPumpFinalOdometer}
                             />
                         </Input>
                         <FormControlError>
@@ -263,7 +270,36 @@ export function Refuel() {
                                 as={AlertCircleIcon}
                             />
                             <FormControlErrorText>
-                                {formik.errors?.finalOdometer}
+                                {formik.errors?.fuelPumpFinalOdometer}
+                            </FormControlErrorText>
+                        </FormControlError>
+                    </FormControl>
+                    <FormControl
+                        size="lg"
+                        isInvalid={formik.errors.literValue && formik.touched.literValue ? true : false}
+
+                    >
+                        <FormControlLabel>
+                            <FormControlLabelText>Quantidade abastecida</FormControlLabelText>
+                        </FormControlLabel>
+                        <Input
+                            size="xl"
+                            isDisabled
+                        >
+                            <InputField
+                                type="text"
+                                keyboardType="number-pad"
+                                autoCapitalize="none"
+                                value={literAmountValue()}
+                            />
+                        </Input>
+                        <FormControlError>
+                            <FormControlErrorIcon
+                                fontSize={10}
+                                as={AlertCircleIcon}
+                            />
+                            <FormControlErrorText>
+                                {formik.errors?.literValue}
                             </FormControlErrorText>
                         </FormControlError>
                     </FormControl>

@@ -62,10 +62,8 @@ export function SignIn() {
 
                 if(isDriverChecked !== null) {
                     await storageVehiclesSave([isDriverChecked]);
-                    console.log(isDriverChecked);
-                    
                     userVehicleData = {
-                        operationalBaseId: isDriverChecked.operationalBaseId,
+                        operationalBaseId: isDriverChecked?.operationalBase?.operationalBaseId || "",
                         vehicleId: isDriverChecked.vehicleId,
                         checkedIn: true,
                     }
