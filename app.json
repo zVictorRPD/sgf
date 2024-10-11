@@ -18,7 +18,13 @@
             "adaptiveIcon": {
                 "foregroundImage": "./assets/adaptive-icon.png",
                 "backgroundColor": "#ffffff"
-            }
+            },
+            "permissions": [
+                "android.permission.RECORD_AUDIO",
+                "android.permission.INTERNET",
+                "android.permission.ACCESS_NETWORK_STATE"
+            ],
+            "package": "com.zvictor_rpd.sgf"
         },
         "web": {
             "favicon": "./assets/favicon.png"
@@ -30,7 +36,20 @@
                 {
                     "photosPermission": "The app accesses your photos to let you share them with your friends."
                 }
+            ],
+            [
+                "expo-build-properties",
+                {
+                    "android": {
+                        "usesCleartextTraffic": true
+                    }
+                }
             ]
-        ]
+        ],
+        "extra": {
+            "eas": {
+                "projectId": "d8d8ea5b-ab8e-4cae-9ea1-a30339daaa5b"
+            }
+        }
     }
 }
