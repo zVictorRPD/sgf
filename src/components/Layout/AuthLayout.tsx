@@ -55,6 +55,9 @@ export function AuthLayout({ title, children }: IAuthLayoutProps) {
                                 borderBottomRightRadius={8}
                             >
                                 {children}
+                                <Text fontSize={14} textAlign="center">
+                                    Versão {process.env.EXPO_PUBLIC_APP_VERSION || "1.0.0"}
+                                </Text>
                             </VStack>
                         </Box>
                     </VStack>
