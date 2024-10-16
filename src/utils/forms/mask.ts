@@ -27,3 +27,21 @@ export function getDateTime(){
     const formattedDate = `${date.getFullYear()}-${String((date.getMonth() + 1)).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
     return formattedDate;
 }
+
+
+export function formatPumpOdometer(value: string): string {
+    // Remove qualquer coisa que não seja dígito
+    let cleaned = value.replace(/\D/g, '');
+
+    // Garante que só tenha 6 dígitos
+    if (cleaned.length > 6) {
+        cleaned = cleaned.substring(0, 6);
+    }
+
+    // Adiciona a vírgula antes do último dígito
+    if (cleaned.length === 6) {
+        return cleaned.slice(0, 5) + ',' + cleaned.slice(5);
+    } else {
+        return cleaned;
+    }
+}

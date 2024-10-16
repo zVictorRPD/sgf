@@ -9,7 +9,7 @@ import { ToastMessage } from '@components/ToastMessage';
 import { ChevronDownIcon, SaveIcon } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { IFuelTable } from '@utils/interfaces/fuel';
-import { floatToString, getDateTime, onlyNumbers, stringToDecimals } from '@utils/forms/mask';
+import { floatToString, formatPumpOdometer, getDateTime, onlyNumbers, stringToDecimals } from '@utils/forms/mask';
 import { getDriverByCpf } from '@utils/fetchs/getDriver';
 import { useVehicles } from '@hooks/useVehicles';
 
@@ -28,15 +28,16 @@ export function Refuel() {
 
 
     async function handleSubmitFuel(values: typeof initialValues) {
-
         try {
             const vehicle = vehicles.find((vehicle) => vehicle.vehicleId === user?.vehicleId);
             const literValue = parseFloat(values.literValue) / 100;
-            const literAmount = parseInt(values.fuelPumpFinalOdometer) - parseInt(values.fuelPumpInitialOdometer);
-            const amountPaid = Number((literAmount * literValue).toFixed(2));
+            const literAmount = Number((parseFloat(formik.values.fuelPumpFinalOdometer.replace(",", ".")) - parseFloat(formik.values.fuelPumpInitialOdometer.replace(",", "."))).toFixed(1));
+            const amountPaid = Number((literAmount * literValue).toFixed(3));
 
             let formattedValues = {
                 ...values,
+                fuelPumpInitialOdometer: values.fuelPumpInitialOdometer.replace(",", "."),
+                fuelPumpFinalOdometer: values.fuelPumpFinalOdometer.replace(",", "."),
                 amountPaid: amountPaid,
                 driverId: null,
                 literAmount: literAmount,
@@ -123,15 +124,17 @@ export function Refuel() {
     }
 
     function literAmountValue() {
-        if(formik.values.fuelPumpInitialOdometer === "" || formik.values.fuelPumpFinalOdometer === "") return "0";
-        if(parseInt(formik.values.fuelPumpInitialOdometer) > parseInt(formik.values.fuelPumpFinalOdometer)) return "0";
+        if (formik.values.fuelPumpInitialOdometer === "" || formik.values.fuelPumpFinalOdometer === "") return "0";
+        if (formik.values.fuelPumpInitialOdometer.length < 6 || formik.values.fuelPumpFinalOdometer.length < 6) return "0";
+        if (parseFloat(formik.values.fuelPumpInitialOdometer.replace(",", ".")) > parseFloat(formik.values.fuelPumpFinalOdometer.replace(",", "."))) return "0";
 
-        return String(parseInt(formik.values.fuelPumpFinalOdometer) - parseInt(formik.values.fuelPumpInitialOdometer));
+        return (parseFloat(formik.values.fuelPumpFinalOdometer.replace(",", ".")) - parseFloat(formik.values.fuelPumpInitialOdometer.replace(",", "."))).toFixed(1).replace(".", ",");
     }
 
     useEffect(() => {
         getFuel();
     }, [])
+
     return (
         <VStack flex={1}>
             <AppHeader title="Abastecer" />
@@ -151,7 +154,7 @@ export function Refuel() {
                                 formik.setFieldValue("fuelTableId", value);
                                 handleChangeFuelType(value);
                             }}
-                            selectedValue={formik.values.fuelTableId}
+                            selectedValue={formik.values.fuelTableId !== "" ? formik.values.fuelTableId : null}
                         >
                             <SelectTrigger variant="outline" size="xl" >
                                 <SelectInput placeholder="Selecione um tipo de combustível" />
@@ -213,7 +216,7 @@ export function Refuel() {
                             </FormControlErrorText>
                         </FormControlError>
                     </FormControl>
-                    <FormControl 
+                    <FormControl
                         size="lg"
                         isInvalid={formik.errors.fuelPumpInitialOdometer && formik.touched.fuelPumpInitialOdometer ? true : false}
                     >
@@ -228,9 +231,10 @@ export function Refuel() {
                                 placeholder="Hodômetro inicial da bomba"
                                 keyboardType="number-pad"
                                 autoCapitalize="none"
-                                onChangeText={(value) => formik.setFieldValue("fuelPumpInitialOdometer", onlyNumbers(value))}
+                                onChangeText={(value) => formik.setFieldValue("fuelPumpInitialOdometer", formatPumpOdometer(value))}
                                 onBlur={formik.handleBlur("fuelPumpInitialOdometer")}
                                 value={formik.values.fuelPumpInitialOdometer}
+                                maxLength={7}
                             />
                         </Input>
                         <FormControlError>
@@ -259,9 +263,10 @@ export function Refuel() {
                                 placeholder="Hodômetro final da bomba"
                                 keyboardType="number-pad"
                                 autoCapitalize="none"
-                                onChangeText={(value) => formik.setFieldValue("fuelPumpFinalOdometer", onlyNumbers(value))}
+                                onChangeText={(value) => formik.setFieldValue("fuelPumpFinalOdometer", formatPumpOdometer(value))}
                                 onBlur={formik.handleBlur("fuelPumpFinalOdometer")}
                                 value={formik.values.fuelPumpFinalOdometer}
+                                maxLength={7}
                             />
                         </Input>
                         <FormControlError>
